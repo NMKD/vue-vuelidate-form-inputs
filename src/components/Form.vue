@@ -1,6 +1,6 @@
 <template>
   <div class="container">
-    <form action="" class="p-3 mt-5">
+    <form class="m-5" @submit.prevent="onSubmit">
       <div class="form-group">
         <label for="email">Email</label>
         <input type="email" name="email" id="email" class="form-control" v-model="email" @blur="$v.email.$touch()"
@@ -11,24 +11,74 @@
         <div class="invalid-feedback" v-if="!$v.email.required">
           Email is required.
         </div>
+        <div class="invalid-feedback" v-if="!$v.email.uniqEmail">
+          Email is allready exist.
+        </div>
       </div>
+
+      <div class="form-group mt-3">
+        <label for="password">Password</label>
+        <input type="password" name="password" id="password" class="form-control" v-model="password"
+          @blur="$v.password.$touch()" :class="{ 'is-invalid': $v.password.$error }">
+        <div class="invalid-feedback" v-if="!$v.password.minLength">
+          Min length of password {{ $v.password.$params.minLength.min }}. Now is {{ password.length }}
+        </div>
+      </div>
+
+      <div class="form-group mt-3">
+        <label for="confirm">Confirm password</label>
+        <input type="confirm" name="confirm" id="confirm" class="form-control" v-model="confirm"
+          @blur="$v.confirm.$touch()" :class="{ 'is-invalid': $v.confirm.$error }">
+        <div class="invalid-feedback" v-if="!$v.confirm.sameAs">
+          Password should match.
+        </div>
+      </div>
+      <button class="btn btn-success m-0 mt-5" type="submit" :disabled="$v.$invalid">Submit</button>
     </form>
   </div>
 </template>
 
 <script>
-import { required, email } from 'vuelidate/lib/validators'
+import { required, email, minLength, sameAs } from 'vuelidate/lib/validators'
 export default {
-  name: "v-button-conroller",
+  name: "v-form-login",
   data() {
     return {
-      email: ''
+      email: '',
+      password: '',
+      confirm: ''
+    }
+  },
+  methods: {
+    onSubmit() {
+      console.log('Email: ' + this.email)
+      console.log('Password: ' + this.password)
     }
   },
   validations: {
     email: {
       required,
-      email
+      email,
+      uniqEmail(newEmail) {
+        if (newEmail === '') {
+          return true
+        }
+        // eslint-disable-next-line no-unused-vars
+        return new Promise((resolve, reject) => {
+          setTimeout(() => {
+            const value = newEmail !== 'test@mail.ru'
+            resolve(value)
+          }, 1000)
+        })
+      }
+    },
+    password: {
+      minLength: minLength(8)
+    },
+    confirm: {
+      sameAs: sameAs((vue) => {
+        return vue.password
+      })
     }
   }
 }
